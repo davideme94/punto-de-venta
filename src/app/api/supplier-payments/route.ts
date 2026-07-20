@@ -13,14 +13,15 @@ import {
 export const dynamic =
   "force-dynamic";
 
-type CashSource =
+type FundSource =
   | "PHYSICAL_REGISTER"
   | "VIRTUAL_ACCOUNT";
 
-type CreateWithdrawalBody = {
-  withdrawalAmount?: number;
-  cashSource?: CashSource;
-  transferReference?: string;
+type CreateSupplierPaymentBody = {
+  supplierName?: string;
+  amount?: number;
+  fundSource?: FundSource;
+  reference?: string;
   notes?: string;
 };
 
@@ -38,6 +39,7 @@ type PhysicalBalanceRow = {
   opening_amount_cents: number;
   cash_sales_cents: number;
   withdrawals_cents: number;
+  supplier_payments_cents: number;
 };
 
 type VirtualBalanceRow = {
@@ -45,36 +47,36 @@ type VirtualBalanceRow = {
   digital_sales_cents: number;
   withdrawal_transfers_cents: number;
   virtual_cash_withdrawals_cents: number;
+  supplier_payments_cents: number;
 };
 
-type CreatedWithdrawalRow = {
+type SupplierPaymentRow = {
   id: string;
-  operation_number: number;
+  payment_number: number;
+
   operator_user_id: string;
   operator_name: string;
 
-  physical_register_session_id:
-    | string
-    | null;
+  operator_physical_session_id: string;
 
   register_name:
     | string
     | null;
 
-  virtual_account_session_id: string;
-  virtual_account_name: string;
+  virtual_account_session_id:
+    | string
+    | null;
 
-  cash_source: CashSource;
+  virtual_account_name:
+    | string
+    | null;
 
-  withdrawal_amount_cents: number;
+  fund_source: FundSource;
 
-  commission_rate_basis_points: number;
+  supplier_name: string;
+  amount_cents: number;
 
-  commission_amount_cents: number;
-
-  transfer_total_cents: number;
-
-  transfer_reference:
+  reference:
     | string
     | null;
 
@@ -85,47 +87,6 @@ type CreatedWithdrawalRow = {
   status: string;
   created_at: string;
 };
-
-type RecentWithdrawalRow = {
-  id: string;
-  operation_number: number;
-  operator_name: string;
-
-  register_name:
-    | string
-    | null;
-
-  virtual_account_name: string;
-
-  cash_source: CashSource;
-
-  withdrawal_amount_cents: number;
-  commission_amount_cents: number;
-  transfer_total_cents: number;
-
-  transfer_reference:
-    | string
-    | null;
-
-  notes:
-    | string
-    | null;
-
-  status: string;
-  created_at: string;
-};
-
-const COMMISSION_RATE_BASIS_POINTS =
-  500;
-
-/*
- * 500 puntos base equivalen al 5%.
- *
- * 100 puntos base = 1%.
- * 500 puntos base = 5%.
- */
-const BASIS_POINTS_DIVISOR =
-  10_000;
 
 function normalizeText(
   value:
@@ -154,26 +115,14 @@ function centsToMoney(
   );
 }
 
-function isCashSource(
+function isFundSource(
   value: unknown,
-): value is CashSource {
+): value is FundSource {
   return (
     value ===
       "PHYSICAL_REGISTER" ||
     value ===
       "VIRTUAL_ACCOUNT"
-  );
-}
-
-function calculateCommissionCents(
-  withdrawalAmountCents: number,
-): number {
-  return Math.round(
-    (
-      withdrawalAmountCents *
-      COMMISSION_RATE_BASIS_POINTS
-    ) /
-      BASIS_POINTS_DIVISOR,
   );
 }
 
@@ -269,7 +218,29 @@ async function loadPhysicalBalance(
                 'COMPLETADA'
         ),
         0
-      ) AS withdrawals_cents
+      ) AS withdrawals_cents,
+
+      COALESCE(
+        (
+          SELECT
+            SUM(
+              supplier_payments.amount_cents
+            )
+
+          FROM supplier_payments
+
+          WHERE
+            supplier_payments.operator_physical_session_id =
+              physical_session.id
+
+            AND supplier_payments.fund_source =
+                'PHYSICAL_REGISTER'
+
+            AND supplier_payments.status =
+                'COMPLETADA'
+        ),
+        0
+      ) AS supplier_payments_cents
 
     FROM physical_register_sessions
       AS physical_session
@@ -369,7 +340,29 @@ async function loadVirtualBalance(
                   'COMPLETADA'
           ),
           0
-        ) AS virtual_cash_withdrawals_cents
+        ) AS virtual_cash_withdrawals_cents,
+
+        COALESCE(
+          (
+            SELECT
+              SUM(
+                supplier_payments.amount_cents
+              )
+
+            FROM supplier_payments
+
+            WHERE
+              supplier_payments.virtual_account_session_id =
+                ?
+
+              AND supplier_payments.fund_source =
+                  'VIRTUAL_ACCOUNT'
+
+              AND supplier_payments.status =
+                  'COMPLETADA'
+          ),
+          0
+        ) AS supplier_payments_cents
     `)
       .bind(
         virtualSession
@@ -377,6 +370,8 @@ async function loadVirtualBalance(
 
         virtualSession
           .opened_at,
+
+        virtualSession.id,
 
         virtualSession.id,
 
@@ -398,6 +393,9 @@ async function loadVirtualBalance(
 
       virtual_cash_withdrawals_cents:
         0,
+
+      supplier_payments_cents:
+        0,
     }
   );
 }
@@ -414,6 +412,9 @@ function calculatePhysicalAvailableCents(
     ) -
     Number(
       balance.withdrawals_cents,
+    ) -
+    Number(
+      balance.supplier_payments_cents,
     )
   );
 }
@@ -433,102 +434,77 @@ function calculateVirtualAvailableCents(
     ) -
     Number(
       balance.virtual_cash_withdrawals_cents,
+    ) -
+    Number(
+      balance.supplier_payments_cents,
     )
   );
 }
 
-function mapWithdrawal(
-  withdrawal: CreatedWithdrawalRow,
+function mapSupplierPayment(
+  payment: SupplierPaymentRow,
 ) {
   return {
     id:
-      withdrawal.id,
+      payment.id,
 
-    operationNumber:
-      withdrawal.operation_number,
+    paymentNumber:
+      payment.payment_number,
 
     operatorUserId:
-      withdrawal.operator_user_id,
+      payment.operator_user_id,
 
     operatorName:
-      withdrawal.operator_name,
+      payment.operator_name,
 
-    physicalRegisterSessionId:
-      withdrawal
-        .physical_register_session_id,
+    physicalSessionId:
+      payment
+        .operator_physical_session_id,
 
     registerName:
-      withdrawal.register_name,
+      payment.register_name,
 
-    virtualAccountSessionId:
-      withdrawal
+    virtualSessionId:
+      payment
         .virtual_account_session_id,
 
     virtualAccountName:
-      withdrawal
+      payment
         .virtual_account_name,
 
-    cashSource:
-      withdrawal.cash_source,
+    fundSource:
+      payment.fund_source,
 
-    cashSourceLabel:
-      withdrawal.cash_source ===
+    fundSourceLabel:
+      payment.fund_source ===
       "PHYSICAL_REGISTER"
-        ? withdrawal.register_name ??
+        ? payment.register_name ??
           "Caja física"
-        : withdrawal
-            .virtual_account_name,
+        : payment.virtual_account_name ??
+          "Caja virtual",
 
-    withdrawalAmount:
+    supplierName:
+      payment.supplier_name,
+
+    amount:
       centsToMoney(
-        withdrawal
-          .withdrawal_amount_cents,
+        payment.amount_cents,
       ),
 
-    commissionRate:
-      Number(
-        withdrawal
-          .commission_rate_basis_points,
-      ) / 100,
-
-    commissionAmount:
-      centsToMoney(
-        withdrawal
-          .commission_amount_cents,
-      ),
-
-    transferTotal:
-      centsToMoney(
-        withdrawal
-          .transfer_total_cents,
-      ),
-
-    transferReference:
-      withdrawal
-        .transfer_reference,
+    reference:
+      payment.reference,
 
     notes:
-      withdrawal.notes,
+      payment.notes,
 
     status:
-      withdrawal.status,
+      payment.status,
 
     createdAt:
-      withdrawal.created_at,
+      payment.created_at,
   };
 }
 
-/*
- * GET /api/cash-withdrawals
- *
- * Devuelve:
- *
- * - la cajera conectada;
- * - la caja física asignada;
- * - la caja virtual abierta;
- * - los fondos disponibles;
- * - las extracciones recientes.
- */
 export async function GET(
   request: NextRequest,
 ) {
@@ -588,117 +564,11 @@ export async function GET(
         env.DB,
       );
 
-    if (!virtualSession) {
-      return Response.json(
-        {
-          error:
-            "No existe una caja virtual abierta.",
-        },
-        {
-          status: 409,
-        },
-      );
-    }
-
-    if (
-      cashier.businessDate !==
-      virtualSession.business_date
-    ) {
-      return Response.json(
-        {
-          error:
-            "La caja física y la caja virtual tienen fechas comerciales diferentes.",
-        },
-        {
-          status: 409,
-        },
-      );
-    }
-
-    const [
-      physicalBalance,
-      virtualBalance,
-      recentResult,
-    ] = await Promise.all([
-      loadPhysicalBalance(
+    const physicalBalance =
+      await loadPhysicalBalance(
         env.DB,
         cashier.physicalSessionId,
-      ),
-
-      loadVirtualBalance(
-        env.DB,
-        virtualSession,
-      ),
-
-      env.DB.prepare(`
-        SELECT
-          withdrawals.id,
-          withdrawals.operation_number,
-
-          operator.display_name
-            AS operator_name,
-
-          registers.name
-            AS register_name,
-
-          virtual_accounts.name
-            AS virtual_account_name,
-
-          withdrawals.cash_source,
-          withdrawals.withdrawal_amount_cents,
-          withdrawals.commission_amount_cents,
-          withdrawals.transfer_total_cents,
-          withdrawals.transfer_reference,
-          withdrawals.notes,
-          withdrawals.status,
-          withdrawals.created_at
-
-        FROM cash_withdrawals
-          AS withdrawals
-
-        INNER JOIN app_users
-          AS operator
-          ON operator.id =
-             withdrawals.operator_user_id
-
-        LEFT JOIN physical_register_sessions
-          AS physical_session
-          ON physical_session.id =
-             withdrawals
-               .physical_register_session_id
-
-        LEFT JOIN physical_registers
-          AS registers
-          ON registers.id =
-             physical_session.register_id
-
-        INNER JOIN virtual_account_sessions
-          AS virtual_session
-          ON virtual_session.id =
-             withdrawals
-               .virtual_account_session_id
-
-        INNER JOIN virtual_accounts
-          AS virtual_accounts
-          ON virtual_accounts.id =
-             virtual_session
-               .virtual_account_id
-
-        WHERE
-          withdrawals.virtual_account_session_id =
-            ?
-
-        ORDER BY
-          withdrawals.operation_number
-            DESC
-
-        LIMIT 20
-      `)
-        .bind(
-          virtualSession.id,
-        )
-        .all<RecentWithdrawalRow>(),
-    ]);
+      );
 
     if (!physicalBalance) {
       return Response.json(
@@ -712,20 +582,112 @@ export async function GET(
       );
     }
 
+    let virtualBalance:
+      | VirtualBalanceRow
+      | null =
+      null;
+
+    if (
+      virtualSession &&
+      virtualSession.business_date ===
+        cashier.businessDate
+    ) {
+      virtualBalance =
+        await loadVirtualBalance(
+          env.DB,
+          virtualSession,
+        );
+    }
+
+    const recentResult =
+      await env.DB.prepare(`
+        SELECT
+          supplier_payments.id,
+          supplier_payments.payment_number,
+          supplier_payments.operator_user_id,
+
+          operator.display_name
+            AS operator_name,
+
+          supplier_payments.operator_physical_session_id,
+
+          registers.name
+            AS register_name,
+
+          supplier_payments.virtual_account_session_id,
+
+          virtual_accounts.name
+            AS virtual_account_name,
+
+          supplier_payments.fund_source,
+          supplier_payments.supplier_name,
+          supplier_payments.amount_cents,
+          supplier_payments.reference,
+          supplier_payments.notes,
+          supplier_payments.status,
+          supplier_payments.created_at
+
+        FROM supplier_payments
+
+        INNER JOIN app_users
+          AS operator
+          ON operator.id =
+             supplier_payments.operator_user_id
+
+        INNER JOIN physical_register_sessions
+          AS physical_session
+          ON physical_session.id =
+             supplier_payments
+               .operator_physical_session_id
+
+        INNER JOIN physical_registers
+          AS registers
+          ON registers.id =
+             physical_session.register_id
+
+        LEFT JOIN virtual_account_sessions
+          AS virtual_session
+          ON virtual_session.id =
+             supplier_payments
+               .virtual_account_session_id
+
+        LEFT JOIN virtual_accounts
+          AS virtual_accounts
+          ON virtual_accounts.id =
+             virtual_session.virtual_account_id
+
+        WHERE
+          supplier_payments.operator_physical_session_id =
+            ?
+
+          OR supplier_payments.virtual_account_session_id =
+            ?
+
+        ORDER BY
+          supplier_payments.payment_number
+            DESC
+
+        LIMIT 20
+      `)
+        .bind(
+          cashier.physicalSessionId,
+          virtualSession?.id ?? "",
+        )
+        .all<SupplierPaymentRow>();
+
     const physicalAvailableCents =
       calculatePhysicalAvailableCents(
         physicalBalance,
       );
 
     const virtualAvailableCents =
-      calculateVirtualAvailableCents(
-        virtualBalance,
-      );
+      virtualBalance
+        ? calculateVirtualAvailableCents(
+            virtualBalance,
+          )
+        : null;
 
     return Response.json({
-      commissionRate:
-        5,
-
       cashier: {
         id:
           cashier.userId,
@@ -771,128 +733,91 @@ export async function GET(
               .withdrawals_cents,
           ),
 
+        previousSupplierPayments:
+          centsToMoney(
+            physicalBalance
+              .supplier_payments_cents,
+          ),
+
         availableAmount:
           centsToMoney(
             physicalAvailableCents,
           ),
       },
 
-      virtualSource: {
-        sessionId:
-          virtualSession.id,
+      virtualSource:
+        virtualSession &&
+        virtualBalance &&
+        virtualAvailableCents !==
+          null
+          ? {
+              sessionId:
+                virtualSession.id,
 
-        accountId:
-          virtualSession
-            .virtual_account_id,
+              accountId:
+                virtualSession
+                  .virtual_account_id,
 
-        accountCode:
-          virtualSession
-            .virtual_account_code,
+              accountCode:
+                virtualSession
+                  .virtual_account_code,
 
-        accountName:
-          virtualSession
-            .virtual_account_name,
+              accountName:
+                virtualSession
+                  .virtual_account_name,
 
-        openingBalance:
-          centsToMoney(
-            virtualBalance
-              .opening_balance_cents,
-          ),
+              openingBalance:
+                centsToMoney(
+                  virtualBalance
+                    .opening_balance_cents,
+                ),
 
-        digitalSales:
-          centsToMoney(
-            virtualBalance
-              .digital_sales_cents,
-          ),
+              digitalSales:
+                centsToMoney(
+                  virtualBalance
+                    .digital_sales_cents,
+                ),
 
-        withdrawalTransfers:
-          centsToMoney(
-            virtualBalance
-              .withdrawal_transfers_cents,
-          ),
+              withdrawalTransfers:
+                centsToMoney(
+                  virtualBalance
+                    .withdrawal_transfers_cents,
+                ),
 
-        previousCashWithdrawals:
-          centsToMoney(
-            virtualBalance
-              .virtual_cash_withdrawals_cents,
-          ),
+              previousCashWithdrawals:
+                centsToMoney(
+                  virtualBalance
+                    .virtual_cash_withdrawals_cents,
+                ),
 
-        availableAmount:
-          centsToMoney(
-            virtualAvailableCents,
-          ),
-      },
+              previousSupplierPayments:
+                centsToMoney(
+                  virtualBalance
+                    .supplier_payments_cents,
+                ),
 
-      recentWithdrawals:
+              availableAmount:
+                centsToMoney(
+                  virtualAvailableCents,
+                ),
+            }
+          : null,
+
+      recentPayments:
         recentResult.results.map(
-          (withdrawal) => ({
-            id:
-              withdrawal.id,
-
-            operationNumber:
-              withdrawal
-                .operation_number,
-
-            operatorName:
-              withdrawal
-                .operator_name,
-
-            registerName:
-              withdrawal
-                .register_name,
-
-            virtualAccountName:
-              withdrawal
-                .virtual_account_name,
-
-            cashSource:
-              withdrawal
-                .cash_source,
-
-            withdrawalAmount:
-              centsToMoney(
-                withdrawal
-                  .withdrawal_amount_cents,
-              ),
-
-            commissionAmount:
-              centsToMoney(
-                withdrawal
-                  .commission_amount_cents,
-              ),
-
-            transferTotal:
-              centsToMoney(
-                withdrawal
-                  .transfer_total_cents,
-              ),
-
-            transferReference:
-              withdrawal
-                .transfer_reference,
-
-            notes:
-              withdrawal.notes,
-
-            status:
-              withdrawal.status,
-
-            createdAt:
-              withdrawal
-                .created_at,
-          }),
+          mapSupplierPayment,
         ),
     });
   } catch (error) {
     console.error(
-      "Error al cargar extracciones:",
+      "Error al cargar pagos de proveedores:",
       error,
     );
 
     return Response.json(
       {
         error:
-          "No se pudo cargar la información de las extracciones.",
+          "No se pudo cargar la información de los pagos de proveedores.",
       },
       {
         status: 500,
@@ -901,15 +826,6 @@ export async function GET(
   }
 }
 
-/*
- * POST /api/cash-withdrawals
- *
- * Registra una extracción contra
- * transferencia.
- *
- * La comisión del 5% se calcula
- * exclusivamente en el servidor.
- */
 export async function POST(
   request: NextRequest,
 ) {
@@ -962,19 +878,25 @@ export async function POST(
     }
 
     const body =
-      (await request.json()) as CreateWithdrawalBody;
+      (await request.json()) as
+        CreateSupplierPaymentBody;
 
-    const withdrawalAmount =
-      Number(
-        body.withdrawalAmount,
+    const supplierName =
+      normalizeText(
+        body.supplierName,
       );
 
-    const cashSource =
-      body.cashSource;
+    const amount =
+      Number(
+        body.amount,
+      );
 
-    const transferReference =
+    const fundSource =
+      body.fundSource;
+
+    const reference =
       normalizeText(
-        body.transferReference,
+        body.reference,
       ) || null;
 
     const notes =
@@ -982,16 +904,11 @@ export async function POST(
         body.notes,
       ) || null;
 
-    if (
-      !Number.isFinite(
-        withdrawalAmount,
-      ) ||
-      withdrawalAmount <= 0
-    ) {
+    if (!supplierName) {
       return Response.json(
         {
           error:
-            "Ingresá un importe de retiro válido.",
+            "Ingresá el nombre del proveedor.",
         },
         {
           status: 400,
@@ -1000,14 +917,46 @@ export async function POST(
     }
 
     if (
-      !isCashSource(
-        cashSource,
+      supplierName.length >
+      120
+    ) {
+      return Response.json(
+        {
+          error:
+            "El nombre del proveedor es demasiado largo.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (
+      !Number.isFinite(
+        amount,
+      ) ||
+      amount <= 0
+    ) {
+      return Response.json(
+        {
+          error:
+            "Ingresá un importe válido.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (
+      !isFundSource(
+        fundSource,
       )
     ) {
       return Response.json(
         {
           error:
-            "Seleccioná de dónde sale el efectivo.",
+            "Seleccioná de qué caja sale el pago.",
         },
         {
           status: 400,
@@ -1015,33 +964,24 @@ export async function POST(
       );
     }
 
-    const withdrawalAmountCents =
+    const amountCents =
       moneyToCents(
-        withdrawalAmount,
+        amount,
       );
 
     if (
-      withdrawalAmountCents <= 0
+      amountCents <= 0
     ) {
       return Response.json(
         {
           error:
-            "El importe de retiro debe ser mayor que cero.",
+            "El importe debe ser mayor que cero.",
         },
         {
           status: 400,
         },
       );
     }
-
-    const commissionAmountCents =
-      calculateCommissionCents(
-        withdrawalAmountCents,
-      );
-
-    const transferTotalCents =
-      withdrawalAmountCents +
-      commissionAmountCents;
 
     const { env } =
       getCloudflareContext();
@@ -1051,7 +991,11 @@ export async function POST(
         env.DB,
       );
 
-    if (!virtualSession) {
+    if (
+      fundSource ===
+        "VIRTUAL_ACCOUNT" &&
+      !virtualSession
+    ) {
       return Response.json(
         {
           error:
@@ -1064,8 +1008,11 @@ export async function POST(
     }
 
     if (
+      fundSource ===
+        "VIRTUAL_ACCOUNT" &&
+      virtualSession &&
       cashier.businessDate !==
-      virtualSession.business_date
+        virtualSession.business_date
     ) {
       return Response.json(
         {
@@ -1078,20 +1025,11 @@ export async function POST(
       );
     }
 
-    const [
-      physicalBalance,
-      virtualBalance,
-    ] = await Promise.all([
-      loadPhysicalBalance(
+    const physicalBalance =
+      await loadPhysicalBalance(
         env.DB,
         cashier.physicalSessionId,
-      ),
-
-      loadVirtualBalance(
-        env.DB,
-        virtualSession,
-      ),
-    ]);
+      );
 
     if (!physicalBalance) {
       return Response.json(
@@ -1110,21 +1048,16 @@ export async function POST(
         physicalBalance,
       );
 
-    const virtualAvailableCents =
-      calculateVirtualAvailableCents(
-        virtualBalance,
-      );
-
     if (
-      cashSource ===
+      fundSource ===
         "PHYSICAL_REGISTER" &&
       physicalAvailableCents <
-        withdrawalAmountCents
+        amountCents
     ) {
       return Response.json(
         {
           error:
-            `No hay suficiente efectivo en ${cashier.registerName ?? "la caja física"}. Disponible: ${centsToMoney(
+            `No hay suficiente dinero en ${cashier.registerName ?? "la caja física"}. Disponible: $${centsToMoney(
               physicalAvailableCents,
             )}.`,
         },
@@ -1134,37 +1067,58 @@ export async function POST(
       );
     }
 
+    let virtualAvailableCents:
+      | number
+      | null =
+      null;
+
     if (
-      cashSource ===
+      fundSource ===
         "VIRTUAL_ACCOUNT" &&
-      virtualAvailableCents <
-        withdrawalAmountCents
+      virtualSession
     ) {
-      return Response.json(
-        {
-          error:
-            `No hay suficiente dinero en ${virtualSession.virtual_account_name}. Disponible: ${centsToMoney(
-              virtualAvailableCents,
-            )}.`,
-        },
-        {
-          status: 409,
-        },
-      );
+      const virtualBalance =
+        await loadVirtualBalance(
+          env.DB,
+          virtualSession,
+        );
+
+      virtualAvailableCents =
+        calculateVirtualAvailableCents(
+          virtualBalance,
+        );
+
+      if (
+        virtualAvailableCents <
+        amountCents
+      ) {
+        return Response.json(
+          {
+            error:
+              `No hay suficiente dinero en ${virtualSession.virtual_account_name}. Disponible: $${centsToMoney(
+                virtualAvailableCents,
+              )}.`,
+          },
+          {
+            status: 409,
+          },
+        );
+      }
     }
 
-    const withdrawalId =
+    const paymentId =
       crypto.randomUUID();
 
-    const physicalSessionId =
-      cashSource ===
-      "PHYSICAL_REGISTER"
-        ? cashier.physicalSessionId
+    const virtualSessionId =
+      fundSource ===
+        "VIRTUAL_ACCOUNT"
+        ? virtualSession?.id ??
+          null
         : null;
 
     await env.DB.batch([
       env.DB.prepare(`
-        UPDATE cash_withdrawal_counter
+        UPDATE supplier_payment_counter
 
         SET
           last_number =
@@ -1175,18 +1129,16 @@ export async function POST(
       `),
 
       env.DB.prepare(`
-        INSERT INTO cash_withdrawals (
+        INSERT INTO supplier_payments (
           id,
-          operation_number,
+          payment_number,
           operator_user_id,
-          physical_register_session_id,
+          operator_physical_session_id,
           virtual_account_session_id,
-          cash_source,
-          withdrawal_amount_cents,
-          commission_rate_basis_points,
-          commission_amount_cents,
-          transfer_total_cents,
-          transfer_reference,
+          fund_source,
+          supplier_name,
+          amount_cents,
+          reference,
           notes,
           status
         )
@@ -1202,115 +1154,105 @@ export async function POST(
           ?,
           ?,
           ?,
-          ?,
-          ?,
           'COMPLETADA'
 
-        FROM cash_withdrawal_counter
+        FROM supplier_payment_counter
 
         WHERE
           id = 1
       `).bind(
-        withdrawalId,
+        paymentId,
 
         cashier.userId,
 
-        physicalSessionId,
+        cashier.physicalSessionId,
 
-        virtualSession.id,
+        virtualSessionId,
 
-        cashSource,
+        fundSource,
 
-        withdrawalAmountCents,
+        supplierName,
 
-        COMMISSION_RATE_BASIS_POINTS,
+        amountCents,
 
-        commissionAmountCents,
-
-        transferTotalCents,
-
-        transferReference,
+        reference,
 
         notes,
       ),
     ]);
 
-    const createdWithdrawal =
+    const createdPayment =
       await env.DB.prepare(`
         SELECT
-          withdrawals.id,
-          withdrawals.operation_number,
-          withdrawals.operator_user_id,
+          supplier_payments.id,
+          supplier_payments.payment_number,
+          supplier_payments.operator_user_id,
 
           operator.display_name
             AS operator_name,
 
-          withdrawals.physical_register_session_id,
+          supplier_payments.operator_physical_session_id,
 
           registers.name
             AS register_name,
 
-          withdrawals.virtual_account_session_id,
+          supplier_payments.virtual_account_session_id,
 
           virtual_accounts.name
             AS virtual_account_name,
 
-          withdrawals.cash_source,
-          withdrawals.withdrawal_amount_cents,
-          withdrawals.commission_rate_basis_points,
-          withdrawals.commission_amount_cents,
-          withdrawals.transfer_total_cents,
-          withdrawals.transfer_reference,
-          withdrawals.notes,
-          withdrawals.status,
-          withdrawals.created_at
+          supplier_payments.fund_source,
+          supplier_payments.supplier_name,
+          supplier_payments.amount_cents,
+          supplier_payments.reference,
+          supplier_payments.notes,
+          supplier_payments.status,
+          supplier_payments.created_at
 
-        FROM cash_withdrawals
-          AS withdrawals
+        FROM supplier_payments
 
         INNER JOIN app_users
           AS operator
           ON operator.id =
-             withdrawals.operator_user_id
+             supplier_payments.operator_user_id
 
-        LEFT JOIN physical_register_sessions
+        INNER JOIN physical_register_sessions
           AS physical_session
           ON physical_session.id =
-             withdrawals
-               .physical_register_session_id
+             supplier_payments
+               .operator_physical_session_id
 
-        LEFT JOIN physical_registers
+        INNER JOIN physical_registers
           AS registers
           ON registers.id =
              physical_session.register_id
 
-        INNER JOIN virtual_account_sessions
+        LEFT JOIN virtual_account_sessions
           AS virtual_session
           ON virtual_session.id =
-             withdrawals
+             supplier_payments
                .virtual_account_session_id
 
-        INNER JOIN virtual_accounts
+        LEFT JOIN virtual_accounts
           AS virtual_accounts
           ON virtual_accounts.id =
-             virtual_session
-               .virtual_account_id
+             virtual_session.virtual_account_id
 
         WHERE
-          withdrawals.id = ?
+          supplier_payments.id = ?
 
         LIMIT 1
       `)
         .bind(
-          withdrawalId,
+          paymentId,
         )
-        .first<CreatedWithdrawalRow>();
+        .first<SupplierPaymentRow>();
 
-    if (!createdWithdrawal) {
+    if (!createdPayment) {
       return Response.json(
         {
           error:
-            "La extracción fue guardada, pero no pudo recuperarse.",
+            "El pago fue guardado, pero no pudo recuperarse.",
         },
         {
           status: 500,
@@ -1321,41 +1263,31 @@ export async function POST(
     return Response.json(
       {
         message:
-          "La extracción fue registrada correctamente.",
+          "El pago al proveedor fue registrado correctamente.",
 
-        withdrawal:
-          mapWithdrawal(
-            createdWithdrawal,
+        payment:
+          mapSupplierPayment(
+            createdPayment,
           ),
 
         summary: {
-          withdrawalAmount:
+          supplierName,
+
+          amount:
             centsToMoney(
-              withdrawalAmountCents,
+              amountCents,
             ),
 
-          commissionRate:
-            5,
+          fundSource,
 
-          commissionAmount:
-            centsToMoney(
-              commissionAmountCents,
-            ),
-
-          transferTotal:
-            centsToMoney(
-              transferTotalCents,
-            ),
-
-          cashSource,
-
-          cashSourceLabel:
-            cashSource ===
+          fundSourceLabel:
+            fundSource ===
             "PHYSICAL_REGISTER"
               ? cashier.registerName ??
                 "Caja física"
               : virtualSession
-                  .virtual_account_name,
+                  ?.virtual_account_name ??
+                "Caja virtual",
         },
       },
       {
@@ -1364,7 +1296,7 @@ export async function POST(
     );
   } catch (error) {
     console.error(
-      "Error al registrar extracción:",
+      "Error al registrar pago de proveedor:",
       error,
     );
 
@@ -1375,93 +1307,13 @@ export async function POST(
 
     if (
       errorMessage.includes(
-        "INVALID_CASHIER",
-      )
-    ) {
-      return Response.json(
-        {
-          error:
-            "La cajera ya no está habilitada.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    if (
-      errorMessage.includes(
-        "CASHIER_WITHOUT_CONFIRMED_REGISTER",
-      )
-    ) {
-      return Response.json(
-        {
-          error:
-            "La cajera no tiene una caja abierta y confirmada.",
-        },
-        {
-          status: 409,
-        },
-      );
-    }
-
-    if (
-      errorMessage.includes(
-        "INVALID_OR_CLOSED_VIRTUAL_SESSION",
-      )
-    ) {
-      return Response.json(
-        {
-          error:
-            "La caja virtual fue cerrada o ya no está disponible.",
-        },
-        {
-          status: 409,
-        },
-      );
-    }
-
-    if (
-      errorMessage.includes(
-        "INVALID_PHYSICAL_CASH_SOURCE",
-      )
-    ) {
-      return Response.json(
-        {
-          error:
-            "La caja física seleccionada ya no pertenece a la cajera.",
-        },
-        {
-          status: 409,
-        },
-      );
-    }
-
-    if (
-      errorMessage.includes(
-        "REGISTER_BUSINESS_DATE_MISMATCH",
-      )
-    ) {
-      return Response.json(
-        {
-          error:
-            "La caja física y la caja virtual tienen fechas comerciales diferentes.",
-        },
-        {
-          status: 409,
-        },
-      );
-    }
-
-    if (
-      errorMessage.includes(
         "UNIQUE constraint failed",
       )
     ) {
       return Response.json(
         {
           error:
-            "No se pudo generar el número de operación. Volvé a intentarlo.",
+            "No se pudo generar el número del pago. Volvé a intentarlo.",
         },
         {
           status: 409,
@@ -1472,7 +1324,7 @@ export async function POST(
     return Response.json(
       {
         error:
-          "No se pudo registrar la extracción.",
+          "No se pudo registrar el pago al proveedor.",
       },
       {
         status: 500,

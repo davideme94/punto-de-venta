@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 
 import styles from "./page.module.css";
 
-type OperationType = "NEGOCIO" | "VIRTUAL" | "RETIRO" | "QUINIELA";
+type OperationType =
+  | "NEGOCIO"
+  | "VIRTUAL"
+  | "RETIRO"
+  | "QUINIELA"
+  | "PROVEEDOR";
 
 type PaymentMethod = "EFECTIVO" | "TRANSFERENCIA" | "TARJETA" | "MIXTO";
 
@@ -189,6 +194,78 @@ type WithdrawalResponse = {
 };
 
 
+type SupplierPaymentRecord = {
+  id: string;
+  paymentNumber: number;
+  operatorUserId: string;
+  operatorName: string;
+  physicalSessionId: string;
+  registerName: string | null;
+  virtualSessionId: string | null;
+  virtualAccountName: string | null;
+  fundSource: CashSource;
+  fundSourceLabel: string;
+  supplierName: string;
+  amount: number;
+  reference: string | null;
+  notes: string | null;
+  status: string;
+  createdAt: string;
+};
+
+type SupplierPaymentsInformationResponse = {
+  cashier?: {
+    id: string;
+    username: string;
+    displayName: string;
+  };
+
+  businessDate?: string | null;
+
+  physicalSource?: {
+    sessionId: string;
+    registerId: string;
+    registerCode: string | null;
+    registerName: string | null;
+    openingAmount: number;
+    cashSales: number;
+    previousWithdrawals: number;
+    previousSupplierPayments: number;
+    availableAmount: number;
+  };
+
+  virtualSource?: {
+    sessionId: string;
+    accountId: string;
+    accountCode: string;
+    accountName: string;
+    openingBalance: number;
+    digitalSales: number;
+    withdrawalTransfers: number;
+    previousCashWithdrawals: number;
+    previousSupplierPayments: number;
+    availableAmount: number;
+  } | null;
+
+  recentPayments?: SupplierPaymentRecord[];
+  error?: string;
+};
+
+type SupplierPaymentResponse = {
+  message?: string;
+  payment?: SupplierPaymentRecord;
+
+  summary?: {
+    supplierName: string;
+    amount: number;
+    fundSource: CashSource;
+    fundSourceLabel: string;
+  };
+
+  error?: string;
+};
+
+
 type CashBoxOperationType = "SERVICIO" | "QUINIELA";
 
 type CashBoxOperationRecord = {
@@ -262,6 +339,7 @@ const operationLabels: Record<OperationType, string> = {
   VIRTUAL: "Virtual · Pago de servicios",
   RETIRO: "Extracción de efectivo",
   QUINIELA: "Quiniela",
+  PROVEEDOR: "Pago de proveedores",
 };
 
 const paymentLabels: Record<PaymentMethod, string> = {
@@ -384,7 +462,7 @@ export default function Home() {
 
   /*
    * Extracciones de efectivo contra
-   * transferencia con comisión del 3%.
+   * transferencia con comisión del 5%.
    */
   const [withdrawalInformation, setWithdrawalInformation] =
     useState<WithdrawalInformationResponse | null>(null);
@@ -405,6 +483,34 @@ export default function Home() {
   const [isLoadingWithdrawals, setIsLoadingWithdrawals] = useState(false);
 
   const [isSavingWithdrawal, setIsSavingWithdrawal] = useState(false);
+
+  /*
+   * Pagos a proveedores con egreso
+   * desde caja física o Caja Virtual.
+   */
+  const [supplierInformation, setSupplierInformation] =
+    useState<SupplierPaymentsInformationResponse | null>(null);
+
+  const [supplierName, setSupplierName] = useState("");
+
+  const [supplierAmount, setSupplierAmount] = useState("");
+
+  const [supplierFundSource, setSupplierFundSource] =
+    useState<CashSource>("PHYSICAL_REGISTER");
+
+  const [supplierReference, setSupplierReference] = useState("");
+
+  const [supplierNotes, setSupplierNotes] = useState("");
+
+  const [supplierMessage, setSupplierMessage] = useState(
+    "Ingresá el proveedor, el importe y la caja de origen.",
+  );
+
+  const [isLoadingSupplierPayments, setIsLoadingSupplierPayments] =
+    useState(false);
+
+  const [isSavingSupplierPayment, setIsSavingSupplierPayment] =
+    useState(false);
 
   /*
    * Modal de producto no encontrado.
@@ -596,6 +702,22 @@ export default function Home() {
   }, [activeOperation, currentUser, openRegisterSession]);
 
   /*
+   * Carga los saldos y pagos recientes
+   * al abrir Pago de proveedores.
+   */
+  useEffect(() => {
+    if (
+      activeOperation !== "PROVEEDOR" ||
+      !currentUser ||
+      !openRegisterSession
+    ) {
+      return;
+    }
+
+    void loadSupplierPaymentInformation();
+  }, [activeOperation, currentUser, openRegisterSession]);
+
+  /*
    * Carga Servicios y Quiniela cuando
    * se abre una de esas pestañas.
    */
@@ -673,6 +795,7 @@ export default function Home() {
       VIRTUAL: 0,
       RETIRO: 0,
       QUINIELA: 0,
+      PROVEEDOR: 0,
     };
 
     saleItems.forEach((item) => {
@@ -721,7 +844,7 @@ export default function Home() {
     return Number.isFinite(value) ? value : 0;
   }, [withdrawalAmount]);
 
-  const withdrawalCommissionRate = withdrawalInformation?.commissionRate ?? 3;
+  const withdrawalCommissionRate = withdrawalInformation?.commissionRate ?? 5;
 
   const withdrawalCommission = useMemo(() => {
     if (withdrawalAmountValue <= 0) {
@@ -737,6 +860,29 @@ export default function Home() {
     withdrawalCashSource === "PHYSICAL_REGISTER"
       ? (withdrawalInformation?.physicalSource?.availableAmount ?? 0)
       : (withdrawalInformation?.virtualSource?.availableAmount ?? 0);
+
+  const supplierAmountValue = useMemo(() => {
+    const value = parseMoney(supplierAmount || "0");
+
+    return Number.isFinite(value) ? value : 0;
+  }, [supplierAmount]);
+
+  const selectedSupplierAvailable =
+    supplierFundSource === "PHYSICAL_REGISTER"
+      ? (supplierInformation?.physicalSource?.availableAmount ?? 0)
+      : (supplierInformation?.virtualSource?.availableAmount ?? 0);
+
+  const supplierSourceLabel =
+    supplierFundSource === "PHYSICAL_REGISTER"
+      ? (supplierInformation?.physicalSource?.registerName ??
+        openRegisterSession?.registerName ??
+        "Caja física asignada")
+      : (supplierInformation?.virtualSource?.accountName ?? "Caja Virtual");
+
+  const supplierBalanceAfterPayment = Math.max(
+    0,
+    selectedSupplierAvailable - supplierAmountValue,
+  );
 
   const activeCashBoxOperationType: CashBoxOperationType | null =
     activeOperation === "VIRTUAL"
@@ -939,6 +1085,189 @@ export default function Home() {
       );
     } finally {
       setIsSavingWithdrawal(false);
+    }
+  }
+
+  async function loadSupplierPaymentInformation(
+    showLoadingMessage = true,
+  ) {
+    setIsLoadingSupplierPayments(true);
+
+    if (showLoadingMessage) {
+      setSupplierMessage("Calculando saldos disponibles...");
+    }
+
+    try {
+      const response = await fetch("/api/supplier-payments", {
+        method: "GET",
+        cache: "no-store",
+        credentials: "include",
+      });
+
+      const data =
+        (await response.json()) as SupplierPaymentsInformationResponse;
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.replace("/login");
+        }
+
+        throw new Error(
+          data.error || "No se pudieron cargar los pagos de proveedores.",
+        );
+      }
+
+      setSupplierInformation(data);
+
+      const effectiveSource =
+        supplierFundSource === "VIRTUAL_ACCOUNT" && !data.virtualSource
+          ? "PHYSICAL_REGISTER"
+          : supplierFundSource;
+
+      if (effectiveSource !== supplierFundSource) {
+        setSupplierFundSource(effectiveSource);
+      }
+
+      const availableAmount =
+        effectiveSource === "PHYSICAL_REGISTER"
+          ? (data.physicalSource?.availableAmount ?? 0)
+          : (data.virtualSource?.availableAmount ?? 0);
+
+      setSupplierMessage(
+        `Saldos actualizados. Disponible en el origen seleccionado: ${formatMoney(
+          availableAmount,
+        )}.`,
+      );
+    } catch (error) {
+      console.error("Error al cargar pagos de proveedores:", error);
+
+      setSupplierInformation(null);
+
+      setSupplierMessage(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron cargar los pagos de proveedores.",
+      );
+    } finally {
+      setIsLoadingSupplierPayments(false);
+    }
+  }
+
+  async function confirmSupplierPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const normalizedSupplierName = supplierName.trim();
+
+    if (!normalizedSupplierName) {
+      setSupplierMessage("Ingresá el nombre del proveedor.");
+      return;
+    }
+
+    if (!Number.isFinite(supplierAmountValue) || supplierAmountValue <= 0) {
+      setSupplierMessage("Ingresá un importe válido.");
+      return;
+    }
+
+    if (!supplierInformation) {
+      setSupplierMessage("Primero actualizá los saldos disponibles.");
+      return;
+    }
+
+    if (
+      supplierFundSource === "VIRTUAL_ACCOUNT" &&
+      !supplierInformation.virtualSource
+    ) {
+      setSupplierMessage("No hay una Caja Virtual abierta para realizar el pago.");
+      return;
+    }
+
+    if (supplierAmountValue > selectedSupplierAvailable) {
+      setSupplierMessage(
+        `No hay fondos suficientes en el origen seleccionado. Disponible: ${formatMoney(
+          selectedSupplierAvailable,
+        )}.`,
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Confirmás el pago al proveedor?
+
+` +
+        `Proveedor: ${normalizedSupplierName}
+` +
+        `Importe: ${formatMoney(supplierAmountValue)}
+` +
+        `Sale de: ${supplierSourceLabel}
+` +
+        `Saldo posterior: ${formatMoney(supplierBalanceAfterPayment)}`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsSavingSupplierPayment(true);
+    setSupplierMessage("Registrando pago al proveedor...");
+
+    try {
+      const response = await fetch("/api/supplier-payments", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        credentials: "include",
+
+        body: JSON.stringify({
+          supplierName: normalizedSupplierName,
+          amount: supplierAmountValue,
+          fundSource: supplierFundSource,
+          reference: supplierReference.trim(),
+          notes: supplierNotes.trim(),
+        }),
+      });
+
+      const data = (await response.json()) as SupplierPaymentResponse;
+
+      if (!response.ok || !data.payment) {
+        if (response.status === 401) {
+          router.replace("/login");
+        }
+
+        throw new Error(
+          data.error || "No se pudo registrar el pago al proveedor.",
+        );
+      }
+
+      setSupplierName("");
+      setSupplierAmount("");
+      setSupplierReference("");
+      setSupplierNotes("");
+
+      setSupplierMessage(
+        `Pago N.º ${data.payment.paymentNumber} registrado. ` +
+          `Se pagaron ${formatMoney(data.payment.amount)} a ${
+            data.payment.supplierName
+          } desde ${data.payment.fundSourceLabel}.`,
+      );
+
+      setStatusMessage(
+        `Pago a proveedor N.º ${data.payment.paymentNumber} registrado por ${data.payment.operatorName}.`,
+      );
+
+      await loadSupplierPaymentInformation(false);
+    } catch (error) {
+      console.error("Error al registrar pago de proveedor:", error);
+
+      setSupplierMessage(
+        error instanceof Error
+          ? error.message
+          : "No se pudo registrar el pago al proveedor.",
+      );
+    } finally {
+      setIsSavingSupplierPayment(false);
     }
   }
 
@@ -2713,6 +3042,339 @@ export default function Home() {
                 )}
               </div>
             </div>
+          ) : activeOperation === "PROVEEDOR" ? (
+            <div className={styles.operationBox}>
+              <span className={styles.operationBadge}>PAGO A PROVEEDOR</span>
+
+              <h2 className={styles.panelTitle}>Registrar egreso</h2>
+
+              <p className={styles.hint}>
+                Guardá cuánto se le pagó al proveedor y elegí si el dinero sale
+                de la caja física o de Caja Virtual.
+              </p>
+
+              <form onSubmit={confirmSupplierPayment}>
+                <label className={styles.field}>
+                  <span>Nombre del proveedor</span>
+
+                  <input
+                    className={styles.input}
+                    value={supplierName}
+                    onChange={(event) => setSupplierName(event.target.value)}
+                    placeholder="Ejemplo: Distribuidora Norte"
+                    maxLength={120}
+                    autoFocus
+                  />
+                </label>
+
+                <label className={styles.field}>
+                  <span>Importe pagado</span>
+
+                  <input
+                    className={styles.input}
+                    value={supplierAmount}
+                    onChange={(event) => setSupplierAmount(event.target.value)}
+                    placeholder="Ejemplo: 25000"
+                    inputMode="decimal"
+                  />
+                </label>
+
+                <fieldset
+                  style={{
+                    margin: "18px 0 0",
+                    padding: 0,
+                    border: 0,
+                  }}
+                >
+                  <legend
+                    style={{
+                      marginBottom: "9px",
+                      color: "#526074",
+                      fontSize: "12px",
+                      fontWeight: 900,
+                    }}
+                  >
+                    ¿De qué caja sale el dinero?
+                  </legend>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                      gap: "10px",
+                    }}
+                  >
+                    <label
+                      style={{
+                        padding: "13px",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "9px",
+                        border:
+                          supplierFundSource === "PHYSICAL_REGISTER"
+                            ? "2px solid #2563eb"
+                            : "1px solid #dbe3ef",
+                        borderRadius: "12px",
+                        background:
+                          supplierFundSource === "PHYSICAL_REGISTER"
+                            ? "#eff6ff"
+                            : "#ffffff",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="supplier-source"
+                        value="PHYSICAL_REGISTER"
+                        checked={supplierFundSource === "PHYSICAL_REGISTER"}
+                        onChange={() =>
+                          setSupplierFundSource("PHYSICAL_REGISTER")
+                        }
+                      />
+
+                      <span>
+                        <strong style={{ display: "block" }}>
+                          {supplierInformation?.physicalSource?.registerName ??
+                            openRegisterSession.registerName ??
+                            "Caja física asignada"}
+                        </strong>
+
+                        <small
+                          style={{
+                            display: "block",
+                            marginTop: "4px",
+                            color: "#64748b",
+                          }}
+                        >
+                          Disponible:{" "}
+                          {formatMoney(
+                            supplierInformation?.physicalSource
+                              ?.availableAmount ?? 0,
+                          )}
+                        </small>
+                      </span>
+                    </label>
+
+                    <label
+                      style={{
+                        padding: "13px",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "9px",
+                        border:
+                          supplierFundSource === "VIRTUAL_ACCOUNT"
+                            ? "2px solid #2563eb"
+                            : "1px solid #dbe3ef",
+                        borderRadius: "12px",
+                        background:
+                          supplierFundSource === "VIRTUAL_ACCOUNT"
+                            ? "#eff6ff"
+                            : "#ffffff",
+                        cursor: supplierInformation?.virtualSource
+                          ? "pointer"
+                          : "not-allowed",
+                        opacity: supplierInformation?.virtualSource ? 1 : 0.58,
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="supplier-source"
+                        value="VIRTUAL_ACCOUNT"
+                        checked={supplierFundSource === "VIRTUAL_ACCOUNT"}
+                        disabled={!supplierInformation?.virtualSource}
+                        onChange={() =>
+                          setSupplierFundSource("VIRTUAL_ACCOUNT")
+                        }
+                      />
+
+                      <span>
+                        <strong style={{ display: "block" }}>
+                          {supplierInformation?.virtualSource?.accountName ??
+                            "Caja Virtual no disponible"}
+                        </strong>
+
+                        <small
+                          style={{
+                            display: "block",
+                            marginTop: "4px",
+                            color: "#64748b",
+                          }}
+                        >
+                          Disponible:{" "}
+                          {formatMoney(
+                            supplierInformation?.virtualSource
+                              ?.availableAmount ?? 0,
+                          )}
+                        </small>
+                      </span>
+                    </label>
+                  </div>
+                </fieldset>
+
+                <label className={styles.field}>
+                  <span>Referencia o comprobante opcional</span>
+
+                  <input
+                    className={styles.input}
+                    value={supplierReference}
+                    onChange={(event) =>
+                      setSupplierReference(event.target.value)
+                    }
+                    placeholder="Número de factura, transferencia o recibo"
+                  />
+                </label>
+
+                <label className={styles.field}>
+                  <span>Observación opcional</span>
+
+                  <input
+                    className={styles.input}
+                    value={supplierNotes}
+                    onChange={(event) => setSupplierNotes(event.target.value)}
+                    placeholder="Mercadería pagada, período u otro detalle"
+                  />
+                </label>
+
+                <div
+                  style={{
+                    marginTop: "15px",
+                    padding: "12px 13px",
+                    border: "1px solid #fed7aa",
+                    borderRadius: "11px",
+                    background: "#fff7ed",
+                    color: "#9a3412",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                  }}
+                >
+                  {supplierMessage}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "16px",
+                    display: "flex",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => void loadSupplierPaymentInformation()}
+                    disabled={
+                      isLoadingSupplierPayments || isSavingSupplierPayment
+                    }
+                  >
+                    {isLoadingSupplierPayments
+                      ? "Actualizando..."
+                      : "Actualizar saldos"}
+                  </button>
+
+                  <button
+                    className={styles.primaryButton}
+                    type="submit"
+                    disabled={
+                      isSavingSupplierPayment ||
+                      isLoadingSupplierPayments ||
+                      !supplierInformation ||
+                      (supplierFundSource === "VIRTUAL_ACCOUNT" &&
+                        !supplierInformation.virtualSource)
+                    }
+                  >
+                    {isSavingSupplierPayment
+                      ? "Registrando..."
+                      : `Registrar pago ${formatMoney(supplierAmountValue)}`}
+                  </button>
+                </div>
+              </form>
+
+              <div
+                className={styles.sampleBox}
+                style={{
+                  marginTop: "20px",
+                }}
+              >
+                <strong>Últimos pagos a proveedores</strong>
+
+                {(supplierInformation?.recentPayments?.length ?? 0) === 0 ? (
+                  <p className={styles.hint}>
+                    Todavía no hay pagos a proveedores en esta jornada.
+                  </p>
+                ) : (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      display: "grid",
+                      gap: "9px",
+                    }}
+                  >
+                    {supplierInformation?.recentPayments?.map((payment) => (
+                      <article
+                        key={payment.id}
+                        style={{
+                          padding: "12px",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "11px",
+                          background: "#ffffff",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: "12px",
+                          }}
+                        >
+                          <div>
+                            <strong>
+                              Pago N.º {payment.paymentNumber} ·{" "}
+                              {payment.supplierName}
+                            </strong>
+
+                            <small
+                              style={{
+                                display: "block",
+                                marginTop: "3px",
+                                color: "#64748b",
+                              }}
+                            >
+                              {payment.operatorName} ·{" "}
+                              {formatDateTime(payment.createdAt)}
+                            </small>
+                          </div>
+
+                          <strong>{formatMoney(payment.amount)}</strong>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: "8px 0 0",
+                            color: "#526074",
+                            fontSize: "13px",
+                          }}
+                        >
+                          Origen: {payment.fundSourceLabel}
+                          {payment.reference ? ` · Ref.: ${payment.reference}` : ""}
+                        </p>
+
+                        {payment.notes && (
+                          <p
+                            style={{
+                              margin: "5px 0 0",
+                              color: "#64748b",
+                              fontSize: "12px",
+                            }}
+                          >
+                            {payment.notes}
+                          </p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
             <div className={styles.operationBox}>
               <span className={styles.operationBadge}>
@@ -2990,7 +3652,7 @@ export default function Home() {
                 <h2 className={styles.panelTitle}>Extracción actual</h2>
               </div>
 
-              <span className={styles.itemCount}>3%</span>
+              <span className={styles.itemCount}>5%</span>
             </div>
 
             <div
@@ -3100,6 +3762,100 @@ export default function Home() {
                 Se entrega {formatMoney(withdrawalAmountValue)}, ingresa una
                 transferencia de {formatMoney(withdrawalTransferTotal)} y la
                 ganancia es {formatMoney(withdrawalCommission)}.
+              </p>
+            </div>
+          </aside>
+        ) : activeOperation === "PROVEEDOR" ? (
+          <aside className={`${styles.panel} ${styles.cartPanel}`}>
+            <div className={styles.cartHeader}>
+              <div>
+                <p className={styles.eyebrow}>RESUMEN DE EGRESO</p>
+
+                <h2 className={styles.panelTitle}>Pago actual</h2>
+              </div>
+
+              <span className={styles.itemCount}>
+                {supplierInformation?.recentPayments?.length ?? 0}
+              </span>
+            </div>
+
+            <div
+              style={{
+                padding: "18px",
+                border: "1px solid #fed7aa",
+                borderRadius: "14px",
+                background: "#fff7ed",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  color: "#9a3412",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                }}
+              >
+                IMPORTE A PAGAR
+              </p>
+
+              <strong
+                style={{
+                  display: "block",
+                  marginTop: "7px",
+                  color: "#7c2d12",
+                  fontSize: "31px",
+                }}
+              >
+                {formatMoney(supplierAmountValue)}
+              </strong>
+            </div>
+
+            <div className={styles.summary}>
+              <div className={styles.summaryRow}>
+                <span>Proveedor</span>
+
+                <strong>{supplierName.trim() || "Sin ingresar"}</strong>
+              </div>
+
+              <div className={styles.summaryRow}>
+                <span>Sale de</span>
+
+                <strong>{supplierSourceLabel}</strong>
+              </div>
+
+              <div className={styles.summaryRow}>
+                <span>Disponible</span>
+
+                <strong>{formatMoney(selectedSupplierAvailable)}</strong>
+              </div>
+
+              <div className={`${styles.summaryRow} ${styles.totalRow}`}>
+                <span>Saldo luego del pago</span>
+
+                <strong>{formatMoney(supplierBalanceAfterPayment)}</strong>
+              </div>
+            </div>
+
+            <div className={styles.status}>{supplierMessage}</div>
+
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "14px",
+                border: "1px solid #fecaca",
+                borderRadius: "12px",
+                background: "#fef2f2",
+                color: "#991b1b",
+                fontSize: "13px",
+                lineHeight: 1.5,
+              }}
+            >
+              <strong>Movimiento de caja</strong>
+
+              <p style={{ margin: "6px 0 0" }}>
+                Se descontarán {formatMoney(supplierAmountValue)} de{" "}
+                {supplierSourceLabel} y quedará registrado cuánto se pagó y a
+                qué proveedor.
               </p>
             </div>
           </aside>

@@ -43,6 +43,7 @@ type PhysicalClosingRow = {
   total_sales_cents: number;
   quiniela_cents: number;
   physical_withdrawals_cents: number;
+  physical_supplier_payments_cents: number;
   withdrawal_commissions_cents: number;
 };
 
@@ -62,6 +63,7 @@ type VirtualClosingRow = {
   withdrawal_transfers_cents: number;
   virtual_cash_withdrawals_cents: number;
   physical_cash_withdrawals_cents: number;
+  virtual_supplier_payments_cents: number;
   withdrawal_commissions_cents: number;
 };
 
@@ -74,6 +76,7 @@ type PreparedPhysicalClosing = {
   cashSalesCents: number;
   quinielaCents: number;
   withdrawalsCents: number;
+  supplierPaymentsCents: number;
   expectedAmountCents: number;
   countedAmountCents: number;
   differenceCents: number;
@@ -86,6 +89,7 @@ type PreparedVirtualClosing = {
   openingBalanceCents: number;
   servicesCents: number;
   virtualCashWithdrawalsCents: number;
+  supplierPaymentsCents: number;
   digitalSalesCents: number;
   withdrawalTransfersCents: number;
   commissionCents: number;
@@ -116,6 +120,7 @@ function centsToMoney(value: number): number {
  * + ventas de Negocio cobradas en efectivo
  * + Quiniela
  * - extracciones pagadas desde esa caja
+ * - pagos a proveedores realizados desde esa caja
  */
 async function loadOpenPhysicalSessions(
   db: D1Database,
@@ -211,6 +216,17 @@ async function loadOpenPhysicalSessions(
 
       COALESCE(
         (
+          SELECT SUM(payments.amount_cents)
+          FROM supplier_payments AS payments
+          WHERE payments.operator_physical_session_id = sessions.id
+            AND payments.fund_source = 'PHYSICAL_REGISTER'
+            AND payments.status = 'COMPLETADA'
+        ),
+        0
+      ) AS physical_supplier_payments_cents,
+
+      COALESCE(
+        (
           SELECT SUM(withdrawals.commission_amount_cents)
           FROM cash_withdrawals AS withdrawals
           WHERE withdrawals.physical_register_session_id = sessions.id
@@ -250,6 +266,7 @@ async function loadOpenPhysicalSessions(
  * inicial
  * + Servicios y Boletas cobrados
  * - extracciones pagadas desde Caja Virtual
+ * - pagos a proveedores realizados desde Caja Virtual
  *
  * Las ventas por transferencia, tarjeta y las transferencias
  * de extracciones se informan por separado como movimientos digitales.
@@ -358,6 +375,17 @@ async function loadOpenVirtualSession(
 
       COALESCE(
         (
+          SELECT SUM(payments.amount_cents)
+          FROM supplier_payments AS payments
+          WHERE payments.virtual_account_session_id = sessions.id
+            AND payments.fund_source = 'VIRTUAL_ACCOUNT'
+            AND payments.status = 'COMPLETADA'
+        ),
+        0
+      ) AS virtual_supplier_payments_cents,
+
+      COALESCE(
+        (
           SELECT SUM(withdrawals.commission_amount_cents)
           FROM cash_withdrawals AS withdrawals
           WHERE withdrawals.virtual_account_session_id = sessions.id
@@ -385,7 +413,8 @@ function getPhysicalExpectedCents(session: PhysicalClosingRow): number {
     Number(session.opening_amount_cents) +
     Number(session.cash_sales_cents) +
     Number(session.quiniela_cents) -
-    Number(session.physical_withdrawals_cents)
+    Number(session.physical_withdrawals_cents) -
+    Number(session.physical_supplier_payments_cents)
   );
 }
 
@@ -393,7 +422,8 @@ function getVirtualExpectedCents(session: VirtualClosingRow): number {
   return (
     Number(session.opening_balance_cents) +
     Number(session.services_cents) -
-    Number(session.virtual_cash_withdrawals_cents)
+    Number(session.virtual_cash_withdrawals_cents) -
+    Number(session.virtual_supplier_payments_cents)
   );
 }
 
@@ -423,6 +453,9 @@ function mapPhysicalSession(session: PhysicalClosingRow) {
     withdrawalsFromPhysical: centsToMoney(
       session.physical_withdrawals_cents,
     ),
+    supplierPayments: centsToMoney(
+      session.physical_supplier_payments_cents,
+    ),
     withdrawalCommissions: centsToMoney(
       session.withdrawal_commissions_cents,
     ),
@@ -450,6 +483,9 @@ function mapVirtualSession(session: VirtualClosingRow) {
     ),
     withdrawalsFromPhysical: centsToMoney(
       session.physical_cash_withdrawals_cents,
+    ),
+    supplierPayments: centsToMoney(
+      session.virtual_supplier_payments_cents,
     ),
     withdrawalCommissions: centsToMoney(
       session.withdrawal_commissions_cents,
@@ -485,6 +521,27 @@ function createWithdrawalSummary(
     totalWithdrawalAmount: centsToMoney(fromPhysicalCents + fromVirtualCents),
     totalTransferred: centsToMoney(totalTransferredCents),
     totalCommission: centsToMoney(totalCommissionCents),
+  };
+}
+
+function createSupplierPaymentSummary(
+  physicalSessions: PhysicalClosingRow[],
+  virtualSession: VirtualClosingRow | null,
+) {
+  const fromPhysicalCents = physicalSessions.reduce(
+    (total, session) =>
+      total + Number(session.physical_supplier_payments_cents),
+    0,
+  );
+
+  const fromVirtualCents = Number(
+    virtualSession?.virtual_supplier_payments_cents ?? 0,
+  );
+
+  return {
+    fromPhysicalRegisters: centsToMoney(fromPhysicalCents),
+    fromVirtualAccount: centsToMoney(fromVirtualCents),
+    total: centsToMoney(fromPhysicalCents + fromVirtualCents),
   };
 }
 
@@ -587,6 +644,10 @@ export async function GET(request: NextRequest) {
         virtualSession,
       ),
       withdrawalSummary: createWithdrawalSummary(
+        physicalSessions,
+        virtualSession,
+      ),
+      supplierPaymentSummary: createSupplierPaymentSummary(
         physicalSessions,
         virtualSession,
       ),
@@ -729,6 +790,9 @@ export async function POST(request: NextRequest) {
       const cashSalesCents = Number(session.cash_sales_cents);
       const quinielaCents = Number(session.quiniela_cents);
       const withdrawalsCents = Number(session.physical_withdrawals_cents);
+      const supplierPaymentsCents = Number(
+        session.physical_supplier_payments_cents,
+      );
       const expectedAmountCents = getPhysicalExpectedCents(session);
       const countedAmountCents = moneyToCents(countedAmount);
 
@@ -741,6 +805,7 @@ export async function POST(request: NextRequest) {
         cashSalesCents,
         quinielaCents,
         withdrawalsCents,
+        supplierPaymentsCents,
         expectedAmountCents,
         countedAmountCents,
         differenceCents: countedAmountCents - expectedAmountCents,
@@ -794,6 +859,9 @@ export async function POST(request: NextRequest) {
       const virtualCashWithdrawalsCents = Number(
         openVirtualSession.virtual_cash_withdrawals_cents,
       );
+      const supplierPaymentsCents = Number(
+        openVirtualSession.virtual_supplier_payments_cents,
+      );
       const digitalSalesCents = Number(openVirtualSession.digital_sales_cents);
       const withdrawalTransfersCents = Number(
         openVirtualSession.withdrawal_transfers_cents,
@@ -812,6 +880,7 @@ export async function POST(request: NextRequest) {
         openingBalanceCents,
         servicesCents,
         virtualCashWithdrawalsCents,
+        supplierPaymentsCents,
         digitalSalesCents,
         withdrawalTransfersCents,
         commissionCents,
@@ -917,6 +986,7 @@ export async function POST(request: NextRequest) {
         cashSales: centsToMoney(closing.cashSalesCents),
         quiniela: centsToMoney(closing.quinielaCents),
         withdrawals: centsToMoney(closing.withdrawalsCents),
+        supplierPayments: centsToMoney(closing.supplierPaymentsCents),
         expectedAmount: centsToMoney(closing.expectedAmountCents),
         countedAmount: centsToMoney(closing.countedAmountCents),
         difference: centsToMoney(closing.differenceCents),
@@ -931,6 +1001,9 @@ export async function POST(request: NextRequest) {
             services: centsToMoney(preparedVirtualClosing.servicesCents),
             withdrawalsFromVirtual: centsToMoney(
               preparedVirtualClosing.virtualCashWithdrawalsCents,
+            ),
+            supplierPayments: centsToMoney(
+              preparedVirtualClosing.supplierPaymentsCents,
             ),
             digitalSales: centsToMoney(
               preparedVirtualClosing.digitalSalesCents,
@@ -953,6 +1026,10 @@ export async function POST(request: NextRequest) {
         openVirtualSession,
       ),
       withdrawalSummary: createWithdrawalSummary(
+        openPhysicalSessions,
+        openVirtualSession,
+      ),
+      supplierPaymentSummary: createSupplierPaymentSummary(
         openPhysicalSessions,
         openVirtualSession,
       ),

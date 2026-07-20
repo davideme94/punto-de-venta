@@ -1,12 +1,3 @@
-/*
- * SESIONES DE INICIO DE USUARIO
- *
- * Cuando una empleada ingresa con su PIN,
- * se crea una sesión segura para ese dispositivo.
- *
- * El token original no se guarda.
- * Solo se almacena su hash.
- */
 CREATE TABLE IF NOT EXISTS app_user_sessions (
   id TEXT PRIMARY KEY,
 
@@ -37,30 +28,9 @@ ON app_user_sessions(token_hash);
 CREATE INDEX IF NOT EXISTS idx_app_user_sessions_expires
 ON app_user_sessions(expires_at);
 
-/*
- * Guarda cuándo fue configurado o modificado
- * el PIN de cada usuaria.
- */
 ALTER TABLE app_users
 ADD COLUMN pin_updated_at TEXT;
 
-/*
- * CONFIRMACIÓN DE RECEPCIÓN DE CAJA
- *
- * El administrador informa el monto inicial.
- * La cajera cuenta el dinero recibido y confirma.
- *
- * Estados:
- *
- * PENDIENTE:
- * La cajera todavía no confirmó.
- *
- * CONFIRMADA:
- * El monto contado coincide con el informado.
- *
- * OBSERVADA:
- * La cajera informó una diferencia.
- */
 ALTER TABLE physical_register_sessions
 ADD COLUMN cashier_confirmation_status TEXT
 NOT NULL DEFAULT 'PENDIENTE'
@@ -92,10 +62,6 @@ REFERENCES app_users(id);
 ALTER TABLE physical_register_sessions
 ADD COLUMN cashier_confirmation_notes TEXT;
 
-/*
- * Impide que una empleada confirme
- * la caja asignada a otra persona.
- */
 CREATE TRIGGER IF NOT EXISTS validate_cashier_confirmation_user
 BEFORE UPDATE OF
   cashier_confirmation_status,
@@ -116,14 +82,6 @@ BEGIN
   );
 END;
 
-/*
- * Una confirmación completa debe contener:
- *
- * - monto contado;
- * - diferencia;
- * - fecha y hora;
- * - usuaria que confirmó.
- */
 CREATE TRIGGER IF NOT EXISTS validate_cashier_confirmation_data
 BEFORE UPDATE OF
   cashier_confirmation_status
@@ -147,10 +105,6 @@ BEGIN
   );
 END;
 
-/*
- * Si la caja fue marcada como CONFIRMADA,
- * la diferencia debe ser exactamente cero.
- */
 CREATE TRIGGER IF NOT EXISTS validate_confirmed_cashier_difference
 BEFORE UPDATE OF
   cashier_confirmation_status,
@@ -167,10 +121,6 @@ BEGIN
   );
 END;
 
-/*
- * Si fue marcada como OBSERVADA,
- * debe existir una diferencia.
- */
 CREATE TRIGGER IF NOT EXISTS validate_observed_cashier_difference
 BEFORE UPDATE OF
   cashier_confirmation_status,

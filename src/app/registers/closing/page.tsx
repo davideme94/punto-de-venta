@@ -632,7 +632,7 @@ export default function RegisterClosingPage() {
               <h2 className={styles.sectionTitle}>Resumen de retiros</h2>
               <p className={styles.sectionDescription}>
                 El cliente recibe efectivo y realiza una transferencia con el
-                3% de comisión incluido.
+                5% de comisión incluido.
               </p>
             </div>
           </header>
