@@ -36,13 +36,18 @@ function bytesToBase64(
  */
 function base64ToBytes(
   value: string,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const binary =
     atob(value);
 
+  const buffer =
+    new ArrayBuffer(
+      binary.length,
+    );
+
   const bytes =
     new Uint8Array(
-      binary.length,
+      buffer,
     );
 
   for (
