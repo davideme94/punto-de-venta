@@ -1,0 +1,936 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(59, 130, 246, 0.09),
+      transparent 32%
+    ),
+    #f3f6fb;
+  color: #152033;
+}
+
+.header {
+  max-width: 1500px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.titleGroup {
+  min-width: 0;
+}
+
+.eyebrow,
+.modalEyebrow,
+.periodEyebrow {
+  margin: 0 0 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.title {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: #64748b;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+}
+
+.primaryLink,
+.secondaryLink {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.primaryLink {
+  background: #1f62d1;
+  color: white;
+}
+
+.secondaryLink {
+  border: 1px solid #cbd6e4;
+  background: white;
+  color: #275ba9;
+}
+
+.periodHeader {
+  max-width: 1500px;
+  margin: 0 auto 14px;
+  padding: 17px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #bed1ee;
+  border-radius: 15px;
+  background: #eff5ff;
+}
+
+.periodTitle {
+  margin: 0;
+  color: #183d78;
+  font-size: 23px;
+}
+
+.periodDescription {
+  margin: 5px 0 0;
+  color: #59739b;
+  font-size: 13px;
+}
+
+.periodDateBadge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: white;
+  color: #275ba9;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.statsGrid {
+  max-width: 1500px;
+  margin: 0 auto 20px;
+  display: grid;
+  grid-template-columns:
+    repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.statCard {
+  min-width: 0;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border: 1px solid #dbe3ef;
+  border-radius: 15px;
+  background: white;
+  box-shadow:
+    0 8px 25px
+    rgba(15, 23, 42, 0.05);
+}
+
+.statLabel {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.statValue {
+  overflow: hidden;
+  font-size: 24px;
+  text-overflow: ellipsis;
+}
+
+.statNote {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.profitCard {
+  border-color: #b7e2c5;
+  background: #f0fdf4;
+}
+
+.averageCard {
+  border-color: #c9d7ec;
+  background: #f8fbff;
+}
+
+.toolbarPanel,
+.tablePanel {
+  max-width: 1500px;
+  margin: 0 auto 20px;
+  padding: 21px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: white;
+  box-shadow:
+    0 12px 35px
+    rgba(15, 23, 42, 0.05);
+}
+
+.toolbarTop,
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.toolbarTitle,
+.tableTitle {
+  margin: 0;
+  font-size: 21px;
+}
+
+.toolbarSubtitle,
+.tableSubtitle {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.resetButton,
+.refreshButton {
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #9ab4dc;
+  border-radius: 10px;
+  background: white;
+  color: #275ba9;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.resetButton:disabled,
+.refreshButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.presetButtons {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.presetButton {
+  min-height: 42px;
+  padding: 0 17px;
+  border: 1px solid #cbd6e4;
+  border-radius: 999px;
+  background: white;
+  color: #526074;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.presetButton:hover {
+  border-color: #80a6de;
+  background: #f7faff;
+}
+
+.presetButtonActive {
+  border-color: #1f62d1;
+  background: #1f62d1;
+  color: white;
+  box-shadow:
+    0 6px 15px
+    rgba(31, 98, 209, 0.2);
+}
+
+.presetButtonActive:hover {
+  background: #1f62d1;
+}
+
+.presetButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.filtersForm {
+  margin-top: 18px;
+}
+
+.dateGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(145px, 0.8fr)
+    minmax(145px, 0.8fr)
+    minmax(180px, 1fr)
+    minmax(150px, 0.8fr)
+    minmax(180px, 1fr)
+    auto;
+  gap: 11px;
+  align-items: end;
+}
+
+.field {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: #526074;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dateInput,
+.searchInput,
+.select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cbd6e4;
+  border-radius: 10px;
+  background: white;
+  color: #152033;
+  font-size: 14px;
+  outline: none;
+}
+
+.dateInput:focus,
+.searchInput:focus,
+.select:focus {
+  border-color: #1f62d1;
+  box-shadow:
+    0 0 0 3px
+    rgba(31, 98, 209, 0.1);
+}
+
+.applyButton {
+  min-height: 44px;
+  padding: 0 19px;
+  border: 0;
+  border-radius: 10px;
+  background: #1668d4;
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.applyButton:hover {
+  background: #1258b5;
+}
+
+.applyButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.searchRow {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 11px;
+  align-items: end;
+}
+
+.searchField {
+  max-width: none;
+}
+
+.message {
+  margin-top: 16px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: #eff5ff;
+  color: #275ba9;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.resultCount {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e8f0ff;
+  color: #275ba9;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.tableWrapper,
+.itemsTableWrapper {
+  width: 100%;
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td,
+.itemsTable th,
+.itemsTable td {
+  padding: 13px 11px;
+  border-bottom: 1px solid #e3e9f1;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.table th,
+.itemsTable th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.saleNumber {
+  color: #275ba9;
+  white-space: nowrap;
+}
+
+.userName {
+  font-weight: 700;
+}
+
+.paymentBadge,
+.statusBadge,
+.manualBadge {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.paymentBadge {
+  background: #e8f0ff;
+  color: #275ba9;
+}
+
+.completedBadge {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cancelledBadge {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.moneyPositive {
+  color: #14723a;
+}
+
+.viewButton {
+  padding: 8px 10px;
+  border: 1px solid #9ab4dc;
+  border-radius: 8px;
+  background: white;
+  color: #275ba9;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.viewButton:hover {
+  background: #eff5ff;
+}
+
+.viewButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.emptyCell {
+  padding: 40px !important;
+  color: #64748b;
+  text-align: center !important;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  background:
+    rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.modalCard {
+  width: min(1050px, 100%);
+  max-height: 94vh;
+  overflow-y: auto;
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  background: white;
+  box-shadow:
+    0 30px 90px
+    rgba(15, 23, 42, 0.35);
+}
+
+.modalHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 20px 23px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+}
+
+.modalHeaderInfo {
+  min-width: 0;
+}
+
+.modalHeaderInfo p:last-child {
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 27px;
+}
+
+.closeButton {
+  width: 41px;
+  height: 41px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: white;
+  color: #64748b;
+  font-size: 27px;
+  cursor: pointer;
+}
+
+.detailSummary {
+  padding: 22px 23px 0;
+  display: grid;
+  grid-template-columns:
+    repeat(3, 1fr);
+  gap: 12px;
+}
+
+.detailCard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #dbe3ef;
+  border-radius: 13px;
+  background: #f8fafc;
+}
+
+.detailCardLabel {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.detailCardValue {
+  font-size: 23px;
+}
+
+.profitValue {
+  color: #14723a;
+}
+
+.metaGrid {
+  margin: 16px 23px 0;
+  display: grid;
+  grid-template-columns:
+    repeat(4, 1fr);
+  gap: 10px;
+}
+
+.metaItem {
+  padding: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+
+.metaItem span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.metaItem strong {
+  font-size: 13px;
+}
+
+.section {
+  margin: 20px 23px 0;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.section:last-child {
+  margin-bottom: 23px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+}
+
+.sectionHeader span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.itemsTable {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.manualBadge {
+  margin-left: 7px;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.paymentsList {
+  margin-top: 13px;
+  display: grid;
+  gap: 9px;
+}
+
+.paymentRow {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid #dbe3ef;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+
+.paymentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paymentInfo span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.paymentAmount {
+  color: #14723a;
+  font-size: 18px;
+}
+
+.noteBox,
+.cancellationBox {
+  margin: 20px 23px 23px;
+  padding: 14px;
+  border-radius: 11px;
+}
+
+.noteBox {
+  background: #eff5ff;
+  color: #275ba9;
+}
+
+.cancellationBox {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.noteBox p,
+.cancellationBox p {
+  margin: 7px 0 0;
+}
+
+.closeButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.cancellationSection {
+  margin: 20px 23px 23px;
+  padding: 18px;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  background: #fff7f7;
+}
+
+.cancellationHeading h3 {
+  margin: 0;
+  color: #991b1b;
+  font-size: 18px;
+}
+
+.cancellationHeading p:last-child {
+  margin: 7px 0 0;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cancellationEyebrow {
+  margin: 0 0 5px;
+  color: #b91c1c;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.cancellationForm {
+  margin-top: 16px;
+}
+
+.cancellationField {
+  display: grid;
+  gap: 7px;
+}
+
+.cancellationField span {
+  color: #7f1d1d;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cancellationTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid #f3a8a8;
+  border-radius: 10px;
+  background: white;
+  color: #152033;
+  font: inherit;
+  line-height: 1.45;
+  outline: none;
+}
+
+.cancellationTextarea:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.cancellationTextarea:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.cancellationFormFooter {
+  margin-top: 11px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.characterCount {
+  color: #9f5252;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cancellationError {
+  margin: 5px 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cancelOperationButton {
+  min-height: 43px;
+  padding: 0 17px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 10px;
+  background: #b91c1c;
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.cancelOperationButton:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.cancelOperationButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 1300px) {
+  .statsGrid {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+  .dateGrid {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+  .applyButton {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 900px) {
+  .statsGrid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .metaGrid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .dateGrid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .applyButton {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 780px) {
+  .page {
+    padding: 14px;
+  }
+
+  .header,
+  .toolbarTop,
+  .periodHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .periodDateBadge {
+    align-self: flex-start;
+  }
+
+  .searchRow {
+    grid-template-columns: 1fr;
+  }
+
+  .detailSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .cancellationFormFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cancelOperationButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 540px) {
+  .title {
+    font-size: 29px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dateGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .headerActions {
+    grid-template-columns: 1fr;
+  }
+
+  .presetButtons {
+    display: grid;
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .presetButton:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .toolbarPanel,
+  .tablePanel {
+    padding: 15px;
+  }
+
+  .modalOverlay {
+    padding: 8px;
+    place-items: end center;
+  }
+
+  .modalCard {
+    max-height: 96vh;
+    border-radius:
+      17px 17px 8px 8px;
+  }
+
+  .detailSummary {
+    padding:
+      17px 16px 0;
+  }
+
+  .metaGrid {
+    margin:
+      14px 16px 0;
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    margin:
+      18px 16px 0;
+  }
+
+  .noteBox,
+  .cancellationBox,
+  .cancellationSection {
+    margin:
+      18px 16px;
+  }
+}

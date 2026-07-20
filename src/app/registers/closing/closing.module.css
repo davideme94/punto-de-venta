@@ -1,0 +1,478 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(37, 99, 235, 0.12),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(124, 58, 237, 0.09),
+      transparent 30%
+    ),
+    #f3f6fb;
+  color: #172033;
+}
+
+.shell {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.header,
+.section,
+.emptyState,
+.successCard,
+.loadingCard {
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  background: white;
+  box-shadow:
+    0 18px 55px
+    rgba(15, 23, 42, 0.07);
+}
+
+.header {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.title {
+  margin: 0;
+  font-size: 31px;
+}
+
+.subtitle {
+  margin: 7px 0 0;
+  color: #64748b;
+}
+
+.adminBox {
+  min-width: 190px;
+  padding: 13px 16px;
+  border-radius: 13px;
+  background: #edf4ff;
+  text-align: right;
+}
+
+.adminBox span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.adminBox strong {
+  display: block;
+  margin-top: 4px;
+  color: #1d4f9e;
+}
+
+.message,
+.warning {
+  margin-top: 14px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.message {
+  border: 1px solid #c7d8f3;
+  background: #edf4ff;
+  color: #275ba9;
+}
+
+.warning {
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.section {
+  margin-top: 18px;
+  padding: 24px;
+}
+
+.sectionHeader {
+  margin-bottom: 19px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 24px;
+}
+
+.sectionDescription {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  gap: 17px;
+}
+
+.registerCard,
+.virtualCard {
+  padding: 19px;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  background: #fbfdff;
+}
+
+.virtualCard {
+  max-width: 720px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cardTop h3 {
+  margin: 8px 0 0;
+  font-size: 21px;
+}
+
+.badge,
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.badge {
+  padding: 6px 9px;
+  background: #e0ecff;
+  color: #1d4f9e;
+}
+
+.statusBadge {
+  padding: 7px 10px;
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.cashier {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.metrics {
+  margin-top: 17px;
+  display: grid;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  gap: 10px;
+}
+
+.metric {
+  padding: 12px;
+  border-radius: 11px;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.metric span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.metric strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 17px;
+}
+
+.expectedMetric {
+  grid-column: 1 / -1;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.expectedMetric span {
+  color: #1d4f9e;
+}
+
+.expectedMetric strong {
+  color: #174fae;
+  font-size: 22px;
+}
+
+.field {
+  margin-top: 16px;
+  display: grid;
+  gap: 7px;
+}
+
+.field span {
+  color: #526074;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.input,
+.notes {
+  width: 100%;
+  border: 1px solid #cbd6e4;
+  border-radius: 11px;
+  background: white;
+  color: #172033;
+  font: inherit;
+  outline: none;
+}
+
+.input {
+  min-height: 49px;
+  padding: 0 13px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.notes {
+  min-height: 82px;
+  padding: 12px 13px;
+  resize: vertical;
+}
+
+.input:focus,
+.notes:focus {
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.1);
+}
+
+.differenceBox {
+  margin-top: 11px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.differenceNeutral {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.differenceCorrect {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.differencePositive {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.differenceNegative {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.footerActions {
+  margin-top: 18px;
+  padding: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 11px;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  background: white;
+  box-shadow:
+    0 14px 42px
+    rgba(15, 23, 42, 0.06);
+}
+
+.secondaryButton,
+.closeButton,
+.linkButton {
+  min-height: 48px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  font: inherit;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.secondaryButton {
+  border: 1px solid #cbd6e4;
+  background: white;
+  color: #475569;
+}
+
+.closeButton {
+  border: 0;
+  background: #b42318;
+  color: white;
+}
+
+.closeButton:hover {
+  background: #912018;
+}
+
+.closeButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.linkButton {
+  border: 0;
+  background: #1f62d1;
+  color: white;
+}
+
+.emptyState,
+.successCard,
+.loadingCard {
+  width: 100%;
+  max-width: 900px;
+  margin: 70px auto 0;
+  padding: 34px;
+  text-align: center;
+}
+
+.emptyState > div,
+.loadingCard > div {
+  font-size: 42px;
+}
+
+.emptyState h1,
+.loadingCard h1,
+.successCard h1 {
+  margin: 12px 0 7px;
+}
+
+.emptyState p,
+.loadingCard p,
+.successCard > p {
+  margin: 0 0 20px;
+  color: #64748b;
+}
+
+.successIcon {
+  width: 61px;
+  height: 61px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 29px;
+  font-weight: 900;
+}
+
+.successGrid {
+  margin-top: 23px;
+  display: grid;
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+  gap: 13px;
+  text-align: left;
+}
+
+.successItem {
+  padding: 16px;
+  border: 1px solid #dbe3ef;
+  border-radius: 13px;
+  background: #f8fafc;
+}
+
+.successItem > strong {
+  display: block;
+  font-size: 17px;
+}
+
+.successItem > span {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.successItem p {
+  margin: 9px 0 0;
+  font-size: 13px;
+}
+
+@media (max-width: 800px) {
+  .page {
+    padding: 13px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .adminBox {
+    width: 100%;
+    text-align: left;
+  }
+
+  .cardsGrid,
+  .successGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .expectedMetric {
+    grid-column: auto;
+  }
+
+  .footerActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .secondaryButton,
+  .closeButton,
+  .linkButton {
+    width: 100%;
+  }
+}

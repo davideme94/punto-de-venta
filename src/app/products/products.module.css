@@ -1,0 +1,362 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f3f6fb;
+  color: #152033;
+}
+
+.header {
+  max-width: 1500px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.title {
+  margin: 0;
+  font-size: 36px;
+}
+
+.subtitle {
+  margin: 7px 0 0;
+  color: #64748b;
+}
+
+.backButton {
+  padding: 13px 18px;
+  border: 1px solid #cbd6e4;
+  border-radius: 11px;
+  background: white;
+  color: #275ba9;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.backButton:hover {
+  border-color: #7fa4df;
+  background: #f8fbff;
+}
+
+.stats {
+  max-width: 1500px;
+  margin: 0 auto 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.statCard {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+}
+
+.statCard span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.statCard strong {
+  font-size: 27px;
+}
+
+.layout {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.formPanel,
+.listPanel {
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.06);
+}
+
+.formPanel {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 15px;
+}
+
+.formHeader,
+.listHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.formHeader h2,
+.listHeader h2 {
+  margin: 0;
+}
+
+.cancelButton {
+  padding: 8px 10px;
+  border: 1px solid #cbd6e4;
+  border-radius: 8px;
+  background: white;
+  color: #526074;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: #526074;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.field input,
+.searchInput {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cbd6e4;
+  border-radius: 10px;
+  background: white;
+  color: #152033;
+  font-size: 15px;
+  outline: none;
+}
+
+.field input:focus,
+.searchInput:focus {
+  border-color: #1f62d1;
+  box-shadow: 0 0 0 3px rgba(31, 98, 209, 0.1);
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #526074;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.checkboxField input {
+  width: 18px;
+  height: 18px;
+}
+
+.saveButton {
+  min-height: 49px;
+  border: 0;
+  border-radius: 11px;
+  background: #1f62d1;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background: #174fae;
+}
+
+.saveButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.listPanel {
+  min-width: 0;
+}
+
+.listHeader {
+  align-items: center;
+}
+
+.searchInput {
+  max-width: 360px;
+}
+
+.message {
+  margin: 17px 0;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: #eff5ff;
+  color: #275ba9;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 13px 11px;
+  border-bottom: 1px solid #e3e9f1;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.table code {
+  color: #275ba9;
+  font-weight: 800;
+}
+
+.inactiveRow {
+  opacity: 0.56;
+  background: #fafafa;
+}
+
+.statusBadge {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.activeBadge {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.inactiveBadge {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.rowActions {
+  display: flex;
+  gap: 6px;
+}
+
+.editButton,
+.disableButton,
+.enableButton {
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: white;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.editButton {
+  border: 1px solid #9ab4dc;
+  color: #275ba9;
+}
+
+.disableButton {
+  border: 1px solid #efaaaa;
+  color: #b42323;
+}
+
+.enableButton {
+  border: 1px solid #96d4ab;
+  color: #14723a;
+}
+
+.emptyTable {
+  padding: 35px !important;
+  color: #64748b;
+  text-align: center !important;
+}
+
+@media (max-width: 1050px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .formPanel {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 14px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .backButton {
+    width: 100%;
+    text-align: center;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .listHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .searchInput {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .twoColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .formPanel,
+  .listPanel {
+    padding: 16px;
+  }
+}

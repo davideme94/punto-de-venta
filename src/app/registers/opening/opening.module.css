@@ -1,0 +1,451 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(37, 99, 235, 0.1),
+      transparent 32%
+    ),
+    #f3f6fb;
+  color: #172033;
+}
+
+.header {
+  max-width: 1250px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.eyebrow,
+.sectionEyebrow {
+  margin: 0 0 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.title {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: #64748b;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+}
+
+.primaryLink,
+.secondaryLink,
+.cancelLink {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.primaryLink {
+  background: #1f62d1;
+  color: white;
+}
+
+.secondaryLink,
+.cancelLink {
+  border: 1px solid #cbd6e4;
+  background: white;
+  color: #275ba9;
+}
+
+.datePanel {
+  max-width: 1250px;
+  margin: 0 auto 14px;
+  padding: 17px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid #bed1ee;
+  border-radius: 15px;
+  background: #eff5ff;
+}
+
+.datePanel > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.datePanel span {
+  color: #59739b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.datePanel strong {
+  color: #183d78;
+  font-size: 22px;
+}
+
+.dateField {
+  display: grid;
+  gap: 5px;
+}
+
+.dateField input {
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid #aabdd9;
+  border-radius: 9px;
+  background: white;
+}
+
+.message {
+  max-width: 1250px;
+  margin: 0 auto 14px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: #e8f0ff;
+  color: #275ba9;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.loadingPanel,
+.openingForm,
+.openSessionsSection {
+  max-width: 1250px;
+  margin: 0 auto;
+}
+
+.loadingPanel {
+  padding: 40px;
+  border: 1px solid #dbe3ef;
+  border-radius: 17px;
+  background: white;
+  text-align: center;
+}
+
+.formSection,
+.openSessionsSection {
+  margin-bottom: 18px;
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: white;
+  box-shadow:
+    0 12px 35px
+    rgba(15, 23, 42, 0.05);
+}
+
+.sectionHeader {
+  margin-bottom: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.openBadge {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.registerGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.registerCard,
+.openRegisterCard {
+  padding: 19px;
+  border: 1px solid #dbe3ef;
+  border-radius: 15px;
+  background: #f8fafc;
+}
+
+.cardHeader {
+  margin-bottom: 17px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.cardHeader span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.cardHeader h3 {
+  margin: 4px 0 0;
+  font-size: 21px;
+}
+
+.registerCode,
+.sessionStatus {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #e8f0ff;
+  color: #275ba9 !important;
+  white-space: nowrap;
+}
+
+.field {
+  margin-top: 13px;
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: #526074;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cbd6e4;
+  border-radius: 10px;
+  background: white;
+  color: #172033;
+  font: inherit;
+  outline: none;
+}
+
+.field textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #1f62d1;
+  box-shadow:
+    0 0 0 3px
+    rgba(31, 98, 209, 0.1);
+}
+
+.virtualOpeningCard {
+  padding: 20px;
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 0.8fr)
+    minmax(300px, 1.2fr);
+  gap: 24px;
+  border: 1px solid #c8bff0;
+  border-radius: 15px;
+  background: #f7f5ff;
+}
+
+.virtualLabel {
+  color: #6941c6;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.virtualOpeningCard h3 {
+  margin: 5px 0 7px;
+  font-size: 23px;
+}
+
+.virtualOpeningCard p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.virtualFields {
+  display: grid;
+  gap: 3px;
+}
+
+.formActions {
+  padding: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border: 1px solid #dbe3ef;
+  border-radius: 15px;
+  background: white;
+}
+
+.openButton {
+  min-height: 49px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 11px;
+  background: #14723a;
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.openButton:hover {
+  background: #105e30;
+}
+
+.openButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.cashierInfo,
+.amountInfo {
+  margin-top: 12px;
+  padding: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border-radius: 10px;
+  background: white;
+}
+
+.cashierInfo span,
+.amountInfo span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cashierInfo strong {
+  color: #275ba9;
+  font-size: 18px;
+}
+
+.amountInfo strong {
+  color: #14723a;
+  font-size: 21px;
+}
+
+.sessionMeta {
+  margin-top: 13px;
+  display: grid;
+  gap: 4px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.notes {
+  margin: 13px 0 0;
+  padding: 11px;
+  border-radius: 9px;
+  background: #eff5ff;
+  color: #275ba9;
+  font-size: 12px;
+}
+
+.virtualCard {
+  border-color: #c8bff0;
+  background: #f7f5ff;
+}
+
+.activeNotice {
+  margin: 18px 0 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 850px) {
+  .registerGrid,
+  .virtualOpeningCard {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .page {
+    padding: 14px;
+  }
+
+  .header,
+  .datePanel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .formSection,
+  .openSessionsSection {
+    padding: 16px;
+  }
+
+  .formActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .openButton,
+  .cancelLink {
+    width: 100%;
+  }
+}
+
+@media (max-width: 440px) {
+  .title {
+    font-size: 29px;
+  }
+
+  .headerActions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wrapper {
+  width: 100%;
+  max-width: 1250px;
+  margin: 0 auto 20px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.06);
+}
