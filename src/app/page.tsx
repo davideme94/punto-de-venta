@@ -3549,7 +3549,7 @@ export default function Home() {
                   disabled={isSavingSale}
                 >
                   {isSavingSale
-                    ? "Guardando cuenta..."
+                    ? "Guardando cuenta.."
                     : `Confirmar cobro ${formatMoney(grandTotal)}`}
                 </button>
               </div>
