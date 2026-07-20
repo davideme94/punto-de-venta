@@ -1,8 +1,8 @@
 const PIN_ITERATIONS =
-  150_000;
+  100_000;
 
 const PASSWORD_ITERATIONS =
-  250_000;
+  100_000;
 
 const SECRET_SALT_LENGTH =
   16;
