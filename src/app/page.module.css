@@ -56,7 +56,7 @@
   margin: 0 auto 20px;
   padding: 6px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   border: 1px solid #dbe3ef;
   border-radius: 16px;
@@ -1204,3 +1204,424 @@
     padding: 16px;
   }
 }
+
+/* =========================================================
+   RESPONSIVE PARA PC, TABLET Y PANTALLAS TÁCTILES
+   Estas reglas están al final para prevalecer sobre los
+   breakpoints anteriores sin modificar el diseño de escritorio.
+   ========================================================= */
+
+.page {
+  width: 100%;
+  overflow-x: hidden;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.header,
+.tabs,
+.mainGrid {
+  width: 100%;
+}
+
+.panel,
+.entryCard,
+.saleWorkspace,
+.saleSummaryCard,
+.saleActionsCard,
+.cartPanel {
+  min-width: 0;
+}
+
+.tabs {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.tab {
+  min-width: 0;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+
+.primaryButton,
+.secondaryButton,
+.checkoutButton,
+.confirmSaleButton,
+.paymentOption,
+.modalPrimaryButton,
+.modalSecondaryButton,
+.modalCancelButton,
+.closeModalButton,
+.quantityControl button,
+.removeButton,
+.savePriceButton {
+  touch-action: manipulation;
+}
+
+.input,
+.scanInput,
+.priceInput,
+.modalField input {
+  max-width: 100%;
+}
+
+/* Notebook chica y tablet horizontal grande */
+@media (max-width: 1280px) {
+  .page {
+    padding: 20px;
+  }
+
+  .header,
+  .tabs {
+    margin-bottom: 16px;
+  }
+
+  .mainGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 0.72fr);
+    gap: 16px;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .entryGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.82fr);
+    gap: 14px;
+  }
+
+  .saleBottom {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+    gap: 14px;
+  }
+
+  .tabs {
+    gap: 5px;
+  }
+
+  .tab {
+    padding-inline: 10px;
+    font-size: 13px;
+  }
+}
+
+/* Tablet horizontal y pantallas de alrededor de 1024 px */
+@media (max-width: 1100px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cartPanel {
+    position: static;
+  }
+
+  .entryGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
+  }
+
+  .saleBottom {
+    grid-template-columns: 1fr;
+  }
+
+  .itemList,
+  .saleItemList {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .checkoutButton,
+  .confirmSaleButton {
+    min-height: 58px;
+    font-size: 17px;
+  }
+}
+
+/* Tablet vertical */
+@media (max-width: 900px) {
+  .page {
+    padding: 16px;
+  }
+
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .userBox {
+    min-width: 0;
+    flex: 1 1 260px;
+  }
+
+  .tabs {
+    position: sticky;
+    top: 8px;
+    z-index: 30;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  }
+
+  .tab {
+    min-height: 56px;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .entryGrid,
+  .saleBottom,
+  .modalTwoColumns,
+  .mixedPaymentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .paymentOptions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .itemTop,
+  .itemFooter,
+  .itemControls,
+  .checkoutTotal,
+  .changeBox {
+    flex-wrap: wrap;
+  }
+
+  .scanInput,
+  .input,
+  .priceInput,
+  .modalField input {
+    font-size: 16px;
+  }
+
+  .modalCard,
+  .checkoutModalCard {
+    width: min(720px, 100%);
+    max-height: calc(100dvh - 28px);
+  }
+}
+
+/* Tablet angosta, celular grande y modo dividido */
+@media (max-width: 700px) {
+  .page {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .userBox {
+    width: 100%;
+  }
+
+  .tabs {
+    top: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 5px;
+  }
+
+  .tab {
+    min-height: 52px;
+    padding: 9px 7px;
+    font-size: 12px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .title {
+    font-size: 29px;
+  }
+
+  .panelTitle {
+    font-size: 20px;
+  }
+
+  .scanForm,
+  .manualFields,
+  .actions,
+  .checkoutActions,
+  .modalActions,
+  .mixedSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .scanInput {
+    min-height: 54px;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .checkoutButton,
+  .confirmSaleButton,
+  .paymentOption,
+  .modalPrimaryButton,
+  .modalSecondaryButton,
+  .modalCancelButton {
+    width: 100%;
+    min-height: 52px;
+  }
+
+  .itemControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quantityBlock,
+  .priceBlock,
+  .priceInput {
+    width: 100%;
+  }
+
+  .quantityControl {
+    width: 100%;
+    height: 44px;
+  }
+
+  .quantityControl button {
+    width: 48px;
+    height: 44px;
+  }
+
+  .quantityControl strong {
+    flex: 1;
+  }
+
+  .itemFooter,
+  .businessHeading,
+  .saleWorkspaceHeader,
+  .checkoutTotal {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .summaryRow {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 5px 14px;
+  }
+
+  .summaryRow strong {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .modalOverlay {
+    padding: 8px;
+  }
+
+  .modalHeader,
+  .modalForm {
+    padding: 16px;
+  }
+
+  .modalCard {
+    border-radius: 18px 18px 10px 10px;
+  }
+}
+
+/* Pantallas muy angostas */
+@media (max-width: 430px) {
+  .page {
+    padding: 8px;
+  }
+
+  .tabs {
+    border-radius: 13px;
+  }
+
+  .tab {
+    min-height: 50px;
+    font-size: 11px;
+  }
+
+  .panel,
+  .entryCard,
+  .saleSummaryCard,
+  .saleActionsCard {
+    padding: 14px;
+  }
+
+  .entryCardHeader {
+    gap: 9px;
+  }
+
+  .entryIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .checkoutTotal strong {
+    font-size: 26px;
+  }
+}
+
+/* Tablets utilizadas de manera horizontal con poca altura */
+@media (max-height: 650px) and (orientation: landscape) {
+  .page {
+    padding-top: 12px;
+  }
+
+  .header {
+    margin-bottom: 12px;
+  }
+
+  .tabs {
+    margin-bottom: 12px;
+  }
+
+  .modalOverlay {
+    padding: 8px;
+    place-items: start center;
+  }
+
+  .modalCard,
+  .checkoutModalCard {
+    max-height: calc(100dvh - 16px);
+  }
+}
+
+/* Controles más cómodos al detectar una pantalla táctil */
+@media (hover: none) and (pointer: coarse) {
+  .tab,
+  .primaryButton,
+  .secondaryButton,
+  .checkoutButton,
+  .confirmSaleButton,
+  .paymentOption,
+  .modalPrimaryButton,
+  .modalSecondaryButton,
+  .modalCancelButton {
+    min-height: 52px;
+  }
+
+  .input,
+  .scanInput,
+  .modalField input {
+    min-height: 50px;
+    font-size: 16px;
+  }
+
+  .removeButton,
+  .savePriceButton {
+    min-height: 42px;
+    padding: 8px 12px;
+  }
+
+  .quantityControl,
+  .quantityControl button {
+    min-height: 44px;
+  }
+
+  .tab:hover,
+  .sampleProduct:hover {
+    transform: none;
+  }
+}
+
